@@ -1,0 +1,21 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# Generated artifacts (kept locally)
+data/processed/
+models/*.pkl
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Node (in case dev tooling appears later)
+node_modules/
