@@ -120,6 +120,49 @@ body {
   border-radius: 12px;
 }
 
+/* Catch-all fallback: any interactive element that escaped a custom focus
+   style still gets the coral ring on keyboard focus. Visual-only — no layout
+   shift, no impact on mouse users. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--ink-900),
+    0 0 0 4px rgba(255, 93, 95, 0.55);
+  border-radius: 6px;
+}
+
+/* ---------- skip link ---------- */
+
+.skip-link {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 100;
+  padding: 10px 16px;
+  background: var(--ink-700);
+  color: var(--text-hi);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border: 1px solid rgba(255, 93, 95, 0.45);
+  border-radius: 10px;
+  text-decoration: none;
+  transform: translateY(-200%);
+  transition: transform 0.18s var(--ease-out);
+}
+.skip-link:focus-visible {
+  transform: translateY(0);
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--ink-900),
+    0 0 0 4px rgba(255, 93, 95, 0.7);
+}
+
 /* ---------- nav ---------- */
 
 .nav-link {

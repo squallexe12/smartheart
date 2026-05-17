@@ -155,6 +155,7 @@ function buildField(f) {
     range.max = f.max;
     range.step = f.step;
     range.value = f.default;
+    range.setAttribute("aria-label", f.label);
     setRangeProgress(range);
 
     range.addEventListener("input", () => {
@@ -189,6 +190,7 @@ function buildField(f) {
       input.id = id;
       input.value = String(opt.value);
       input.checked = Number(opt.value) === Number(f.default);
+      input.setAttribute("aria-label", `${f.label}: ${opt.label}`);
       input.addEventListener("change", () => {
         STATE.inputs[f.name] = Number(input.value);
         schedulePredict();
