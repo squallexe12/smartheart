@@ -84,3 +84,35 @@ def test_split_no_overlap_between_train_and_test():
     test_ids = set(X_test.flatten().tolist())
     assert train_ids.isdisjoint(test_ids)
     assert len(train_ids) + len(test_ids) == 100
+
+
+from smartheart.preprocessing import one_hot_encode
+
+
+def test_one_hot_basic_shape_and_columns():
+    values = np.array([0, 1, 2, 0, 1])
+    encoded, columns = one_hot_encode(values, categories=[0, 1, 2], drop_first=False, prefix="cp")
+    assert encoded.shape == (5, 3)
+    assert columns == ["cp_0", "cp_1", "cp_2"]
+
+
+def test_one_hot_drop_first_removes_one_column():
+    values = np.array([0, 1, 2])
+    encoded, columns = one_hot_encode(values, categories=[0, 1, 2], drop_first=True, prefix="cp")
+    assert encoded.shape == (3, 2)
+    assert columns == ["cp_1", "cp_2"]
+
+
+def test_one_hot_correct_content():
+    values = np.array([0, 1, 2])
+    encoded, _ = one_hot_encode(values, categories=[0, 1, 2], drop_first=False, prefix="x")
+    expected = np.eye(3)
+    assert np.array_equal(encoded, expected)
+
+
+def test_one_hot_uses_supplied_categories_for_unseen_values():
+    values = np.array([0, 0, 0])
+    encoded, columns = one_hot_encode(values, categories=[0, 1, 2], drop_first=False, prefix="x")
+    assert encoded.shape == (3, 3)
+    assert np.array_equal(encoded[:, 0], np.ones(3))
+    assert np.array_equal(encoded[:, 1], np.zeros(3))
