@@ -745,6 +745,10 @@ textarea:focus-visible,
   text-align: center;
 }
 .gauge-num {
+  display: inline-flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 3px;
   font-family: "JetBrains Mono", monospace;
   font-weight: 500;
   font-size: 38px;
@@ -754,8 +758,8 @@ textarea:focus-visible,
 }
 .gauge-num .gauge-pct {
   font-size: 16px;
-  color: var(--text-lo);
-  margin-left: 2px;
+  color: var(--text-mid);
+  margin-top: 5px;
 }
 .gauge-sub {
   margin-top: 4px;

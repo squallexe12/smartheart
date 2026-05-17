@@ -372,9 +372,14 @@ function renderResult(proba, contribs, latencyMs, immediate) {
   const pct = proba * 100;
   const band = riskBand(pct);
 
-  // gauge
+  // gauge — drop the decimal at 100% so the 5-character "100.0" doesn't
+  // overflow the 160px gauge ring (and at 0.0 for visual parity).
   const gaugeVal = $("#gauge-value");
-  if (gaugeVal) gaugeVal.textContent = pct.toFixed(1);
+  if (gaugeVal) {
+    const rounded = Math.round(pct * 10) / 10;
+    gaugeVal.textContent =
+      rounded >= 100 ? "100" : rounded <= 0 ? "0" : rounded.toFixed(1);
+  }
   const ring = $("#gauge-ring");
   if (ring) {
     const circumference = 2 * Math.PI * 68; // r = 68
