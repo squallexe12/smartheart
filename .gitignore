@@ -16,6 +16,10 @@ models/*.pkl
 Thumbs.db
 .vscode/
 .idea/
+CLAUDE.md
 
 # Node (in case dev tooling appears later)
 node_modules/
+
+# QA artifacts (local-only screenshots and DOM dumps; large and not useful publicly)
+docs/superpowers/qa-shots/
