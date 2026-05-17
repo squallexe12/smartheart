@@ -1,0 +1,296 @@
+{
+  "version": "1.0",
+  "model_type": "logistic_regression",
+  "trained_on": "UCI Heart Disease (Cleveland)",
+  "metrics": {
+    "test_accuracy": 0.8813559322033898,
+    "test_precision": 0.8571428571428571,
+    "test_recall": 0.8888888888888888,
+    "test_f1": 0.8727272727272727,
+    "test_auc": 0.954861111111111,
+    "final_cost": 0.34984682499342545
+  },
+  "features": [
+    {
+      "name": "age",
+      "kind": "numeric",
+      "label": "Age (years)",
+      "min": 29,
+      "max": 77,
+      "step": 1,
+      "default": 56.0
+    },
+    {
+      "name": "sex",
+      "kind": "categorical",
+      "label": "Sex",
+      "options": [
+        {
+          "value": 0,
+          "label": "Female"
+        },
+        {
+          "value": 1,
+          "label": "Male"
+        }
+      ],
+      "default": 1
+    },
+    {
+      "name": "cp",
+      "kind": "categorical",
+      "label": "Chest pain type",
+      "options": [
+        {
+          "value": 1,
+          "label": "Typical angina"
+        },
+        {
+          "value": 2,
+          "label": "Atypical angina"
+        },
+        {
+          "value": 3,
+          "label": "Non-anginal pain"
+        },
+        {
+          "value": 4,
+          "label": "Asymptomatic"
+        }
+      ],
+      "default": 4
+    },
+    {
+      "name": "trestbps",
+      "kind": "numeric",
+      "label": "Resting BP (mm Hg)",
+      "min": 90,
+      "max": 200,
+      "step": 1,
+      "default": 130.0
+    },
+    {
+      "name": "chol",
+      "kind": "numeric",
+      "label": "Cholesterol (mg/dl)",
+      "min": 120,
+      "max": 565,
+      "step": 1,
+      "default": 243.0
+    },
+    {
+      "name": "fbs",
+      "kind": "categorical",
+      "label": "Fasting blood sugar > 120 mg/dl",
+      "options": [
+        {
+          "value": 0,
+          "label": "No"
+        },
+        {
+          "value": 1,
+          "label": "Yes"
+        }
+      ],
+      "default": 0
+    },
+    {
+      "name": "restecg",
+      "kind": "categorical",
+      "label": "Resting ECG",
+      "options": [
+        {
+          "value": 0,
+          "label": "Normal"
+        },
+        {
+          "value": 1,
+          "label": "ST-T abnormality"
+        },
+        {
+          "value": 2,
+          "label": "LV hypertrophy"
+        }
+      ],
+      "default": 0
+    },
+    {
+      "name": "thalach",
+      "kind": "numeric",
+      "label": "Max heart rate",
+      "min": 70,
+      "max": 210,
+      "step": 1,
+      "default": 153.0
+    },
+    {
+      "name": "exang",
+      "kind": "categorical",
+      "label": "Exercise-induced angina",
+      "options": [
+        {
+          "value": 0,
+          "label": "No"
+        },
+        {
+          "value": 1,
+          "label": "Yes"
+        }
+      ],
+      "default": 0
+    },
+    {
+      "name": "oldpeak",
+      "kind": "numeric",
+      "label": "ST depression (oldpeak)",
+      "min": 0.0,
+      "max": 6.5,
+      "step": 0.1,
+      "default": 0.8
+    },
+    {
+      "name": "slope",
+      "kind": "categorical",
+      "label": "Peak exercise ST slope",
+      "options": [
+        {
+          "value": 1,
+          "label": "Upsloping"
+        },
+        {
+          "value": 2,
+          "label": "Flat"
+        },
+        {
+          "value": 3,
+          "label": "Downsloping"
+        }
+      ],
+      "default": 1
+    },
+    {
+      "name": "ca",
+      "kind": "numeric",
+      "label": "Major vessels colored (0\u20133)",
+      "min": 0,
+      "max": 3,
+      "step": 1,
+      "default": 0.0
+    },
+    {
+      "name": "thal",
+      "kind": "categorical",
+      "label": "Thalassemia",
+      "options": [
+        {
+          "value": 3,
+          "label": "Normal"
+        },
+        {
+          "value": 6,
+          "label": "Fixed defect"
+        },
+        {
+          "value": 7,
+          "label": "Reversible defect"
+        }
+      ],
+      "default": 3
+    }
+  ],
+  "preprocessing": {
+    "numeric_features": [
+      "age",
+      "trestbps",
+      "chol",
+      "thalach",
+      "oldpeak",
+      "ca"
+    ],
+    "binary_features": [
+      "sex",
+      "fbs",
+      "exang"
+    ],
+    "categorical_features": {
+      "cp": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "restecg": [
+        0,
+        1,
+        2
+      ],
+      "slope": [
+        1,
+        2,
+        3
+      ],
+      "thal": [
+        3,
+        6,
+        7
+      ]
+    },
+    "encoded_feature_order": [
+      "age",
+      "trestbps",
+      "chol",
+      "thalach",
+      "oldpeak",
+      "ca",
+      "sex",
+      "fbs",
+      "exang",
+      "cp_2",
+      "cp_3",
+      "cp_4",
+      "restecg_1",
+      "restecg_2",
+      "slope_2",
+      "slope_3",
+      "thal_6",
+      "thal_7"
+    ],
+    "numeric_mean": [
+      54.621848739495796,
+      131.31512605042016,
+      246.28571428571428,
+      148.36974789915968,
+      1.0747899159663865,
+      0.6302521008403361
+    ],
+    "numeric_std": [
+      8.849338005567661,
+      17.777968324789555,
+      52.770892609872874,
+      23.198219848473848,
+      1.1787843394319035,
+      0.8874999937837608
+    ]
+  },
+  "weights": [
+    -0.15113324822552496,
+    0.4629844674135796,
+    0.29027032351838056,
+    -0.40801020906064556,
+    0.4945279717164794,
+    1.0590719793404237,
+    1.2898711290367322,
+    -0.8342722937558384,
+    0.6362548917193763,
+    0.3227911774338867,
+    -0.7025210575673168,
+    0.8103348287781089,
+    -0.07949547225041784,
+    0.08290659844187662,
+    0.8238224064038201,
+    0.055603055615600805,
+    -0.09537958921534777,
+    1.2128711583282825
+  ],
+  "bias": -2.1502995182121007
+}
