@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>SmartHeart - Cardiovascular Risk, Computed in the Browser</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="%23FF5D5F"/><path d="M3 16h5l2-5 4 10 2-5h10" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    />
+    <meta
+      name="description"
+      content="An interactive logistic-regression risk calculator for coronary artery disease, built from scratch in NumPy and running fully in your browser."
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              ink: {
+                900: "#07090F",
+                800: "#0B0F19",
+                700: "#0F1320",
+                600: "#161B2C",
+                500: "#1D2335",
+              },
+              hair: {
+                soft: "rgba(255,255,255,0.06)",
+                hard: "rgba(255,255,255,0.10)",
+              },
+              text: {
+                hi: "#EDEFF5",
+                mid: "#A4ABBE",
+                lo: "#6B7390",
+                xlo: "#4A5170",
+              },
+              accent: {
+                coral: "#FF5D5F",
+                coralSoft: "#FF8B8C",
+                emerald: "#3DDC97",
+                amber: "#F4B860",
+                orange: "#FF8A3D",
+              },
+            },
+            fontFamily: {
+              display: ['"Fraunces"', "ui-serif", "Georgia", "serif"],
+              sans: ['"Inter"', "ui-sans-serif", "system-ui", "sans-serif"],
+              mono: ['"JetBrains Mono"', "ui-monospace", "monospace"],
+            },
+          },
+        },
+      };
+    </script>
+
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+
+  <body class="bg-ink-900 font-sans text-text-hi antialiased selection:bg-accent-coral/30 selection:text-text-hi">
+    <!-- atmospheric background -->
+    <div aria-hidden="true" class="bg-field">
+      <div class="bg-grain"></div>
+      <div class="bg-bloom bg-bloom-coral"></div>
+      <div class="bg-bloom bg-bloom-emerald"></div>
+      <div class="bg-grid"></div>
+    </div>
+
+    <!-- top nav -->
+    <header class="relative z-20">
+      <div class="mx-auto flex max-w-[1240px] items-center justify-between px-6 py-6 sm:px-10 sm:py-8">
+        <a href="#top" class="group flex items-center gap-3">
+          <span class="mark-pulse">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M2 12h4l2-5 4 10 2-5h8" />
+            </svg>
+          </span>
+          <span class="font-display text-[20px] font-medium tracking-[-0.02em] text-text-hi">
+            SmartHeart
+            <span class="ml-1 align-middle text-[11px] font-sans font-medium uppercase tracking-[0.22em] text-text-lo">v1.0</span>
+          </span>
+        </a>
+
+        <nav class="hidden items-center gap-8 text-[13px] text-text-mid md:flex">
+          <a href="#calculator" class="nav-link">Calculator</a>
+          <a href="#how" class="nav-link">How it works</a>
+          <a href="#about" class="nav-link">Model</a>
+          <a
+            href="https://github.com/squallexe12"
+            target="_blank"
+            rel="noopener"
+            class="rounded-full border border-hair-hard bg-ink-700/60 px-4 py-2 text-text-hi backdrop-blur-md transition-[transform,background-color,border-color] duration-200 ease-out hover:-translate-y-px hover:border-accent-coral/60 hover:bg-ink-600/70 focus-visible:focus-ring"
+            >GitHub
+          </a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="top" class="relative z-10">
+      <!-- HERO -->
+      <section class="relative">
+        <div class="mx-auto max-w-[1240px] px-6 pb-24 pt-10 sm:px-10 sm:pb-28 sm:pt-14 lg:pt-20">
+          <div class="grid grid-cols-1 items-start gap-16 lg:grid-cols-[1.15fr_0.85fr] lg:gap-20">
+            <!-- left column -->
+            <div class="reveal" style="--d:0ms">
+              <div class="badge">
+                <span class="badge-dot"></span>
+                <span class="badge-label">Live inference &middot; runs in your browser</span>
+              </div>
+
+              <h1 class="mt-7 font-display text-[44px] font-normal leading-[0.98] tracking-[-0.03em] text-text-hi sm:text-[58px] lg:text-[72px]">
+                A cardiologist&rsquo;s
+                <span class="ital">intuition</span>,
+                <br class="hidden sm:block" />
+                <span class="text-accent-coral">computed</span> from
+                <span class="ital">first principles</span>.
+              </h1>
+
+              <p class="mt-7 max-w-[58ch] text-[16px] leading-[1.65] text-text-mid sm:text-[17px]">
+                SmartHeart estimates the probability of coronary artery disease from thirteen
+                routine clinical signals. The model is a logistic regression hand-derived in
+                NumPy &mdash; no scikit-learn shortcuts &mdash; then frozen, serialized, and
+                shipped to your browser. Every weight is auditable. Every prediction is local.
+              </p>
+
+              <div class="mt-9 flex flex-wrap items-center gap-4 reveal" style="--d:120ms">
+                <a href="#calculator" class="btn-primary group">
+                  <span>Calculate your risk</span>
+                  <svg viewBox="0 0 16 16" class="h-3.5 w-3.5 transition-transform duration-200 ease-out group-hover:translate-y-0.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M8 2v12M3 9l5 5 5-5" />
+                  </svg>
+                </a>
+                <a href="#how" class="btn-ghost">
+                  <span>See the math</span>
+                </a>
+              </div>
+
+              <!-- metric strip -->
+              <div class="mt-14 grid grid-cols-2 gap-6 sm:grid-cols-4 reveal" style="--d:240ms">
+                <div class="stat">
+                  <div class="stat-num"><span data-stat="acc">88.1</span><span class="stat-unit">%</span></div>
+                  <div class="stat-label">Test accuracy</div>
+                </div>
+                <div class="stat">
+                  <div class="stat-num"><span data-stat="auc">0.955</span></div>
+                  <div class="stat-label">ROC AUC</div>
+                </div>
+                <div class="stat">
+                  <div class="stat-num"><span data-stat="f1">0.873</span></div>
+                  <div class="stat-label">F1 score</div>
+                </div>
+                <div class="stat">
+                  <div class="stat-num"><span>303</span></div>
+                  <div class="stat-label">Cleveland samples</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- right column: hero card -->
+            <div class="reveal" style="--d:160ms">
+              <figure class="hero-card">
+                <div class="hero-card-glow"></div>
+                <div class="hero-card-grid"></div>
+
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.22em] text-text-lo">
+                    <span class="h-1.5 w-1.5 rounded-full bg-accent-emerald shadow-[0_0_10px_2px_rgba(61,220,151,0.55)]"></span>
+                    Lead II &middot; Sinus rhythm
+                  </div>
+                  <div class="font-mono text-[11px] tracking-widest text-text-xlo">CH&middot;1</div>
+                </div>
+
+                <!-- ecg trace -->
+                <div class="mt-6">
+                  <svg viewBox="0 0 600 200" class="h-[180px] w-full" preserveAspectRatio="none" aria-hidden="true">
+                    <defs>
+                      <linearGradient id="ecgGrad" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stop-color="#FF5D5F" stop-opacity="0.0" />
+                        <stop offset="20%" stop-color="#FF5D5F" stop-opacity="0.9" />
+                        <stop offset="80%" stop-color="#FF5D5F" stop-opacity="0.9" />
+                        <stop offset="100%" stop-color="#FF5D5F" stop-opacity="0.0" />
+                      </linearGradient>
+                      <filter id="ecgGlow" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur stdDeviation="2.4" result="b" />
+                        <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+                      </filter>
+                    </defs>
+                    <path id="ecgPath"
+                      d="M0 100 L60 100 L80 100 L90 95 L100 105 L110 100 L130 100 L140 60 L150 140 L160 80 L170 100 L210 100 L230 90 L250 110 L270 100 L320 100 L330 95 L340 105 L350 100 L380 100 L390 60 L400 140 L410 80 L420 100 L470 100 L490 90 L510 110 L530 100 L600 100"
+                      stroke="url(#ecgGrad)" stroke-width="1.6" fill="none"
+                      stroke-linecap="round" stroke-linejoin="round"
+                      filter="url(#ecgGlow)"
+                      pathLength="1000"
+                      class="ecg-trace"
+                    />
+                  </svg>
+                </div>
+
+                <!-- mini metrics -->
+                <div class="mt-2 grid grid-cols-3 gap-4 border-t border-hair-soft pt-5">
+                  <div>
+                    <div class="text-[10px] font-medium uppercase tracking-[0.2em] text-text-lo">HR</div>
+                    <div class="mt-1 font-mono text-[22px] text-text-hi">
+                      72<span class="ml-1 text-[11px] text-text-lo">bpm</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="text-[10px] font-medium uppercase tracking-[0.2em] text-text-lo">QRS</div>
+                    <div class="mt-1 font-mono text-[22px] text-text-hi">
+                      94<span class="ml-1 text-[11px] text-text-lo">ms</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="text-[10px] font-medium uppercase tracking-[0.2em] text-text-lo">SpO&#8322;</div>
+                    <div class="mt-1 font-mono text-[22px] text-text-hi">
+                      98<span class="ml-1 text-[11px] text-text-lo">%</span>
+                    </div>
+                  </div>
+                </div>
+
+                <figcaption class="mt-6 flex items-start gap-3 rounded-xl border border-hair-soft bg-ink-800/60 p-4">
+                  <svg viewBox="0 0 24 24" class="mt-0.5 h-4 w-4 shrink-0 text-text-lo" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M12 8v4M12 16h.01" />
+                  </svg>
+                  <p class="text-[12.5px] leading-[1.55] text-text-mid">
+                    Illustrative trace. SmartHeart does not read ECG signals; it scores
+                    clinical inputs you provide below.
+                  </p>
+                </figcaption>
+              </figure>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CALCULATOR -->
+      <section id="calculator" class="relative">
+        <div class="mx-auto max-w-[1240px] px-6 pb-24 sm:px-10">
+          <div class="section-heading reveal">
+            <div class="section-eyebrow">
+              <span class="section-num">01</span>
+              <span>Risk calculator</span>
+            </div>
+            <h2 class="section-title">
+              Thirteen signals. <span class="ital">One probability.</span>
+            </h2>
+            <p class="section-lead">
+              Adjust any field &mdash; the model re-scores instantly. All computation happens
+              locally; nothing leaves your device.
+            </p>
+          </div>
+
+          <div class="mt-14 grid grid-cols-1 gap-10 lg:grid-cols-[1.25fr_0.95fr] lg:gap-12">
+            <!-- inputs -->
+            <form id="calc-form" class="space-y-7" autocomplete="off" novalidate>
+              <fieldset class="card" data-group="demographics">
+                <legend class="card-legend">
+                  <span class="card-legend-tag">A</span>
+                  <span>Demographics</span>
+                </legend>
+                <div class="card-body grid grid-cols-1 gap-x-8 gap-y-7 sm:grid-cols-2" data-fields="age,sex"></div>
+              </fieldset>
+
+              <fieldset class="card" data-group="vitals">
+                <legend class="card-legend">
+                  <span class="card-legend-tag">B</span>
+                  <span>Vital signs</span>
+                </legend>
+                <div class="card-body grid grid-cols-1 gap-x-8 gap-y-7 sm:grid-cols-2" data-fields="trestbps,chol,fbs,thalach"></div>
+              </fieldset>
+
+              <fieldset class="card" data-group="cardiac">
+                <legend class="card-legend">
+                  <span class="card-legend-tag">C</span>
+                  <span>Cardiac signals</span>
+                </legend>
+                <div class="card-body grid grid-cols-1 gap-x-8 gap-y-7 sm:grid-cols-2" data-fields="cp,restecg,exang,oldpeak,slope,ca,thal"></div>
+              </fieldset>
+
+              <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-hair-soft bg-ink-800/40 px-5 py-4">
+                <p class="text-[12.5px] text-text-lo">
+                  Inputs pre-filled with dataset medians. Every change re-runs inference in
+                  ~150&nbsp;ms.
+                </p>
+                <button type="button" id="reset-btn" class="btn-ghost-sm">
+                  <svg viewBox="0 0 16 16" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M2 8a6 6 0 1 0 1.76-4.24L2 5.5" />
+                    <path d="M2 2v3.5h3.5" />
+                  </svg>
+                  Reset to defaults
+                </button>
+              </div>
+            </form>
+
+            <!-- result panel (sticky on desktop) -->
+            <aside class="lg:sticky lg:top-8 lg:self-start">
+              <div id="result-card" class="result-card">
+                <div class="result-card-glow" aria-hidden="true"></div>
+
+                <header class="flex items-center justify-between">
+                  <div class="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.22em] text-text-lo">
+                    <span class="h-1.5 w-1.5 rounded-full bg-accent-coral shadow-[0_0_10px_2px_rgba(255,93,95,0.55)]"></span>
+                    Prediction
+                  </div>
+                  <div class="font-mono text-[11px] tracking-widest text-text-xlo" id="score-stamp">
+                    &sigma;(w&middot;x + b)
+                  </div>
+                </header>
+
+                <!-- gauge -->
+                <div class="mt-5 grid grid-cols-[auto_1fr] items-center gap-6">
+                  <div class="gauge-wrap">
+                    <svg viewBox="0 0 160 160" class="h-[160px] w-[160px]" aria-hidden="true">
+                      <defs>
+                        <linearGradient id="gaugeGrad" x1="0" y1="0" x2="1" y2="1">
+                          <stop offset="0%" stop-color="#FF5D5F" />
+                          <stop offset="100%" stop-color="#FF8A3D" />
+                        </linearGradient>
+                      </defs>
+                      <circle cx="80" cy="80" r="68" stroke="rgba(255,255,255,0.06)" stroke-width="10" fill="none" />
+                      <circle id="gauge-ring" cx="80" cy="80" r="68"
+                        stroke="url(#gaugeGrad)" stroke-width="10" fill="none"
+                        stroke-linecap="round"
+                        transform="rotate(-90 80 80)"
+                        stroke-dasharray="427.26" stroke-dashoffset="427.26" />
+                    </svg>
+                    <div class="gauge-center">
+                      <div class="gauge-num"><span id="gauge-value">&mdash;</span><span class="gauge-pct">%</span></div>
+                      <div class="gauge-sub" id="gauge-band-mini">computing&hellip;</div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div class="text-[11px] font-medium uppercase tracking-[0.22em] text-text-lo">
+                      Risk band
+                    </div>
+                    <div id="band-pill" class="band-pill band-pill--low mt-2">
+                      <span class="band-pill-dot"></span>
+                      <span id="band-label">Awaiting input</span>
+                    </div>
+                    <p id="band-blurb" class="mt-3 text-[13px] leading-[1.55] text-text-mid">
+                      Model probability of coronary artery disease, given the inputs.
+                    </p>
+                  </div>
+                </div>
+
+                <!-- contributions -->
+                <div class="mt-8">
+                  <div class="flex items-center justify-between">
+                    <h3 class="text-[12px] font-medium uppercase tracking-[0.22em] text-text-lo">
+                      Top contributing factors
+                    </h3>
+                    <span class="font-mono text-[10.5px] text-text-xlo">z<sub>i</sub>&middot;w<sub>i</sub></span>
+                  </div>
+                  <ul id="contrib-list" class="mt-4 space-y-2.5"></ul>
+                </div>
+
+                <footer class="mt-7 flex items-center justify-between border-t border-hair-soft pt-4 font-mono text-[10.5px] uppercase tracking-[0.18em] text-text-xlo">
+                  <span>Local inference</span>
+                  <span id="latency-stamp">&mdash; ms</span>
+                </footer>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <!-- HOW IT WORKS -->
+      <section id="how" class="relative">
+        <div class="mx-auto max-w-[1240px] px-6 py-24 sm:px-10">
+          <div class="section-heading">
+            <div class="section-eyebrow">
+              <span class="section-num">02</span>
+              <span>How it works</span>
+            </div>
+            <h2 class="section-title">
+              Linear, then <span class="ital">squashed</span>.
+            </h2>
+            <p class="section-lead">
+              Logistic regression in one sentence: multiply each input by a learned weight, sum,
+              then squash the total through a sigmoid to get a number between zero and one.
+            </p>
+          </div>
+
+          <div class="mt-12 grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div class="step-card">
+              <div class="step-num">01</div>
+              <h3 class="step-title">Encode</h3>
+              <p class="step-body">
+                Six numeric vitals are standardized using the training mean and standard
+                deviation. Categorical fields are one-hot encoded with the first category
+                dropped as a reference level.
+              </p>
+            </div>
+            <div class="step-card">
+              <div class="step-num">02</div>
+              <h3 class="step-title">Score</h3>
+              <p class="step-body">
+                A dot product against eighteen frozen weights produces a single real number, the
+                logit. Each summand is a transparent contribution attributable to one signal.
+              </p>
+            </div>
+            <div class="step-card">
+              <div class="step-num">03</div>
+              <h3 class="step-title">Squash</h3>
+              <p class="step-body">
+                The sigmoid maps the logit into a probability. Bigger logits push the output
+                toward one; very negative logits push it toward zero.
+              </p>
+            </div>
+          </div>
+
+          <div class="formula-card mt-12">
+            <div class="formula-eyebrow">
+              <span class="font-mono">f(x)</span>
+              <span>Hypothesis</span>
+            </div>
+            <div class="formula-line">
+              <span class="font-display italic text-text-hi">p</span>
+              <span class="op">=</span>
+              <span class="font-display italic">&sigma;</span>
+              <span class="paren">(</span>
+              <span class="font-display italic">w &middot; x</span>
+              <span class="op">+</span>
+              <span class="font-display italic">b</span>
+              <span class="paren">)</span>
+              <span class="op">=</span>
+              <span class="frac">
+                <span class="frac-num">1</span>
+                <span class="frac-den">1 + e<sup>&minus;(w &middot; x + b)</sup></span>
+              </span>
+            </div>
+            <p class="mt-6 max-w-[60ch] text-[14px] leading-[1.6] text-text-mid">
+              The eighteen-dimensional vector <span class="font-display italic">x</span> is the
+              encoded patient. The vector <span class="font-display italic">w</span> and scalar
+              <span class="font-display italic">b</span> were learned via batch gradient descent
+              minimising binary cross-entropy on 242 training samples.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ABOUT THE MODEL -->
+      <section id="about" class="relative">
+        <div class="mx-auto max-w-[1240px] px-6 py-24 sm:px-10">
+          <div class="grid grid-cols-1 gap-12 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
+            <div>
+              <div class="section-eyebrow">
+                <span class="section-num">03</span>
+                <span>About the model</span>
+              </div>
+              <h2 class="section-title mt-3">
+                <span class="ital">UCI Heart Disease</span>, the Cleveland subset.
+              </h2>
+              <p class="section-lead">
+                Trained on 242 patients from the cleanest of the four UCI hospital cohorts.
+                Tested on a held-out 61. The full implementation &mdash; gradient derivation,
+                training loop, evaluation &mdash; lives on GitHub.
+              </p>
+
+              <div class="mt-8 flex flex-wrap gap-3">
+                <a href="https://github.com/squallexe12" target="_blank" rel="noopener" class="btn-primary">
+                  <svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor" aria-hidden="true">
+                    <path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.11.79-.25.79-.56v-2c-3.21.7-3.88-1.55-3.88-1.55-.53-1.34-1.3-1.7-1.3-1.7-1.05-.72.08-.7.08-.7 1.17.08 1.78 1.2 1.78 1.2 1.04 1.79 2.73 1.27 3.4.97.1-.75.4-1.27.74-1.56-2.56-.29-5.26-1.28-5.26-5.7 0-1.26.45-2.29 1.18-3.1-.12-.29-.51-1.47.1-3.06 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.62 1.59.23 2.77.11 3.06.74.81 1.18 1.84 1.18 3.1 0 4.43-2.71 5.4-5.28 5.69.41.36.78 1.05.78 2.13v3.16c0 .31.21.68.8.56A11.5 11.5 0 0 0 12 .5Z"/>
+                  </svg>
+                  <span>squallexe12 on GitHub</span>
+                </a>
+              </div>
+            </div>
+
+            <div class="metric-grid">
+              <div class="metric-tile metric-tile--hero">
+                <div class="metric-label">Test accuracy</div>
+                <div class="metric-val">88.1<span>%</span></div>
+                <div class="metric-foot">on 61 held-out patients</div>
+              </div>
+              <div class="metric-tile">
+                <div class="metric-label">Precision</div>
+                <div class="metric-val">85.7<span>%</span></div>
+              </div>
+              <div class="metric-tile">
+                <div class="metric-label">Recall</div>
+                <div class="metric-val">88.9<span>%</span></div>
+              </div>
+              <div class="metric-tile">
+                <div class="metric-label">F1 score</div>
+                <div class="metric-val">0.873</div>
+              </div>
+              <div class="metric-tile">
+                <div class="metric-label">ROC AUC</div>
+                <div class="metric-val">0.955</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DISCLAIMER -->
+      <section class="relative">
+        <div class="mx-auto max-w-[1240px] px-6 pb-24 sm:px-10">
+          <div class="disclaimer">
+            <div class="disclaimer-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3 2 21h20L12 3Z" />
+                <path d="M12 10v5M12 18h.01" />
+              </svg>
+            </div>
+            <div>
+              <div class="disclaimer-title">Academic project. Not a medical device.</div>
+              <p class="disclaimer-body">
+                SmartHeart is built for educational purposes and is not a substitute for
+                clinical judgment, diagnostic equipment, or the advice of a qualified physician.
+                Do not use it to make decisions about your health.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="relative z-10 border-t border-hair-soft">
+      <div class="mx-auto flex max-w-[1240px] flex-col items-start justify-between gap-4 px-6 py-8 sm:flex-row sm:items-center sm:px-10">
+        <div class="flex items-center gap-3 text-[13px] text-text-mid">
+          <span class="font-display text-[16px] tracking-[-0.01em] text-text-hi">SmartHeart</span>
+          <span class="text-text-xlo">&middot;</span>
+          <span>built by Kaan &middot; 2026</span>
+        </div>
+        <div class="flex items-center gap-5 text-[13px]">
+          <a href="https://github.com/squallexe12" target="_blank" rel="noopener" class="nav-link">GitHub</a>
+          <a href="https://archive.ics.uci.edu/dataset/45/heart+disease" target="_blank" rel="noopener" class="nav-link">UCI dataset</a>
+        </div>
+      </div>
+    </footer>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
