@@ -35,3 +35,52 @@ def test_standardize_zero_std_does_not_divide_by_zero():
     mean, std = standardize_fit(X)
     Z = standardize_apply(X, mean, std)
     assert np.all(np.isfinite(Z))
+
+
+from smartheart.preprocessing import train_test_split_manual
+
+
+def test_split_sizes_match_test_size():
+    rng = np.random.default_rng(0)
+    X = rng.normal(size=(100, 3))
+    y = np.array([0] * 50 + [1] * 50)
+    X_train, X_test, y_train, y_test = train_test_split_manual(
+        X, y, test_size=0.2, random_state=42
+    )
+    assert X_test.shape[0] == 20
+    assert X_train.shape[0] == 80
+    assert y_train.shape[0] == 80
+    assert y_test.shape[0] == 20
+
+
+def test_split_preserves_class_ratio_when_stratified():
+    rng = np.random.default_rng(0)
+    X = rng.normal(size=(200, 2))
+    y = np.array([0] * 80 + [1] * 120)
+    _, _, y_train, y_test = train_test_split_manual(
+        X, y, test_size=0.25, random_state=0, stratify=True
+    )
+    train_ratio = y_train.mean()
+    test_ratio = y_test.mean()
+    expected = 120 / 200
+    assert abs(train_ratio - expected) < 0.05
+    assert abs(test_ratio - expected) < 0.05
+
+
+def test_split_is_reproducible_with_same_seed():
+    X = np.arange(50).reshape(50, 1).astype(float)
+    y = (np.arange(50) % 2).astype(int)
+    a = train_test_split_manual(X, y, test_size=0.2, random_state=7)
+    b = train_test_split_manual(X, y, test_size=0.2, random_state=7)
+    for arr_a, arr_b in zip(a, b):
+        assert np.array_equal(arr_a, arr_b)
+
+
+def test_split_no_overlap_between_train_and_test():
+    X = np.arange(100).reshape(100, 1).astype(float)
+    y = (np.arange(100) % 2).astype(int)
+    X_train, X_test, _, _ = train_test_split_manual(X, y, test_size=0.3, random_state=1)
+    train_ids = set(X_train.flatten().tolist())
+    test_ids = set(X_test.flatten().tolist())
+    assert train_ids.isdisjoint(test_ids)
+    assert len(train_ids) + len(test_ids) == 100
